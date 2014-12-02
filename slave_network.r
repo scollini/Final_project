@@ -167,7 +167,8 @@ legend("bottomleft", legend = c("Spouse", "Child", "Sibling"),
 #how the farms were unique and related to one another through the slave community. 
 
 #This is the general idea. I have a lot of the necessary code in other homework
-#but with the messy slave data. I just need to translate it here.
+#but with the messy slave data. I just need to translate it here. This would
+# be in a separate Rmd file. 
 slave_children_1786 <- total_slaverel %>%
   filter(Skill.x == "Child") %>%
   group_by(Farm.x) 
