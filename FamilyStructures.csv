@@ -1,0 +1,49 @@
+Farm,Family structure,Number,Total,Percent ,Census
+Estate,single,29,109,26.60550459,1799
+Estate,one parent,22,109,20.18348624,1799
+Estate,two parent,40,109,36.69724771,1799
+Estate,couples (no known children),18,109,16.51376147,1799
+River Farm,single,4,20,20,1799
+River Farm,one parent,4,20,20,1799
+River Farm,two parent,10,20,50,1799
+River Farm,couples (no known children),2,20,10,1799
+Union ,single,13,28,46.42857143,1799
+Union ,one parent,8,28,28.57142857,1799
+Union ,two parent,7,28,25,1799
+Union ,couples (no known children),0,28,0,1799
+Dogue Run,single,1,13,7.692307692,1799
+Dogue Run,one parent,3,13,23.07692308,1799
+Dogue Run,two parent,7,13,53.84615385,1799
+Dogue Run,couples (no known children),2,13,15.38461538,1799
+Muddy Hole,single,1,12,8.333333333,1799
+Muddy Hole,one parent,4,12,33.33333333,1799
+Muddy Hole,two parent,5,12,41.66666667,1799
+Muddy Hole,couples (no known children),2,12,16.66666667,1799
+Mansion House,single,12,24,50,1799
+Mansion House,one parent,1,24,4.166666667,1799
+Mansion House,two parent,9,24,37.5,1799
+Mansion House,couples (no known children),1,24,4.166666667,1799
+Estate,single,49,95,51.57894737,1786
+Estate,one parent,17,95,17.89473684,1786
+Estate,two parent,18,95,18.94736842,1786
+Estate,couples (no known children),10,95,10.52631579,1786
+River Farm,single,9,22,40.90909091,1786
+River Farm,one parent,4,22,18.18181818,1786
+River Farm,two parent,6,22,27.27272727,1786
+River Farm,couples (no known children),3,22,13.63636364,1786
+Union ,single,11,15,73.33333333,1786
+Union ,one parent,3,15,20,1786
+Union ,two parent,1,15,6.666666667,1786
+Union ,couples (no known children),0,15,0,1786
+Dogue Run,single,7,17,41.17647059,1786
+Dogue Run,one parent,3,17,17.64705882,1786
+Dogue Run,two parent,4,17,23.52941176,1786
+Dogue Run,couples (no known children),3,17,17.64705882,1786
+Muddy Hole,single,3,17,17.64705882,1786
+Muddy Hole,one parent,2,8,25,1786
+Muddy Hole,two parent,3,8,37.5,1786
+Muddy Hole,couples (no known children),0,8,0,1786
+Mansion House,single,19,28,67.85714286,1786
+Mansion House,one parent,5,28,17.85714286,1786
+Mansion House,two parent,3,28,10.71428571,1786
+Mansion House,couples (no known children),1,28,3.571428571,1786
