@@ -6,7 +6,15 @@ output: html_document
 ---
 
 #Introduction
-This project uses network analysis in R to explore community amoung Mount Vernon slaves. The graph investigates two main communities: kinship relations and work relations. The information on the slaves draws from a compiled census created by the Mount Vernon staff at the Fred W. Smith National Library for the Study of George Washington.
+This project explores the kinship relations of the Mount Vernon enslaved community from 1786-1799. Currently, there is great interest in studying the enslaved community on George Washington's estate, such as archaeology of the slave cemetery, the physical spaces in which the slaves lived, their labor, free time, and Washington’s role as a slave owner. The Fred W. Smith National Library for the Study of George Washington staff is currently building a slavery database, in which every mention of every slave that lived, worked, or had some part at Mount Vernon is entered. The documents include farm reports, wills, letters, diaries, censuses, etc. In order to track all of the unique people, they generated a spreadsheet compiling every census taken of the slaves. 
+
+The census is relatively complete, with farm location, estimated age, skill, spouses, and mothers. This project draws from that data in order to explore the kinship relations from the two most complete censuses: 1786 and 1799. We can parse out parent/child, sibling, and spousal relationships. This project examines the network of known kinship relationships on the estate, the overall structure of the enslaved community, and how it changes in those 13 years. Hopefully, a better and more complete picture of the Mount Vernon enslaved community will arise. 
+
+HISTORIOGRAPHY
+
+These slave kinship relations are difficult to study, because the source base is so minimal. If plantation censuses do exist, they are usually fragmentary. Because Washington kept a relatively complete record of his slaves' information, we can learn quite a bit from studying the kinship network and community structure of the Mount Vernon slaves. 
+
+A note on definitions/ terms: Slaves could not legally marry. A “husband” or “wife” listed on the census does not necessarily mean the same thing as a legal marriage, nor does it imply behaviors associated with legal marriage. A structure of two parents or a single parent with children does not necessarily constitute a traditional family, as perceived by a slave. Additionally, polygyny and polyandry were common. We cannot assume blood relations or a slave’s perspective when no direct sources exist. Hoever, in order to analyze the community, I have decided to call the ties “kinship or familial relationships” that make up “family structures”.
 
 First, we load the necessary libraries.
 ```{r}
@@ -287,27 +295,23 @@ names(membmar[membmar ==1])
 induced.subgraph(slave_graph_marriages, which(membership(mar) == 1)) %>% plot()
 ```
 
-
 ##Children
 ```{r}
 children_1786 <- slave_1786 %>%
   filter(Skill == "Child") %>%
   group_by(Farm) %>%
   summarize(Number = n()) %>%
-  mutate(Percent = Number/89 * 100)
+  mutate(Percent_1786 = Number/89 * 100)
 
-ggplot(data = children_1786, aes(x = Farm, y = Percent)) + geom_bar(stat = "identity") + theme(axis.text.x=element_text(angle = 90, hjust = 0)) + ggtitle("Ratio of Children on Mount Vernon Farms in 1786")
-
-```
-
-```{r}
 children_1799 <- slave_1799 %>%
   filter(Skill == "Child") %>%
   group_by(Farm) %>%
   summarize(Number = n()) %>%
-  mutate(Percent = Number/117 * 100)
+  mutate(Percent_1799 = Number/117 * 100) %>%
+  left_join(children_1786, by = "Farm") %>%
+  gather(census, percent, Percent_1786,Percent_1799)
 
-ggplot(data = children_1799, aes(x = Farm, y = Percent)) + geom_bar(stat = "identity") + theme(axis.text.x=element_text(angle = 90, hjust = 0)) + ggtitle("Ratio of Children on Mount Vernon Farms in 1799")
+ggplot(data = children_1799, aes(x = Farm, y = percent, fill = census)) + geom_bar(position = position_dodge(), stat = "identity") + theme(axis.text.x=element_text(angle = 90, hjust = 0)) + ggtitle("Ratio of Children on Mount Vernon Farms, 1786-1799")
 ```
 
 ##Gender Ratios 
@@ -333,7 +337,7 @@ gender_1786 <- gender_1786_females %>%
   mutate(Percent_of_Female = Females/Total * 100) %>%
   gather(gender, percent, Percent_of_Male:Percent_of_Female)
 
-ggplot(data = gender_1786, aes(x = Farm.x, y = percent, fill = gender)) + geom_bar(position = position_dodge(), stat = "identity") + theme(axis.text.x=element_text(angle = 90, hjust = 0)) + ggtitle("Gender Ratio on Mount Vernon Farms in 1786")
+gender_1786_plot <- ggplot(data = gender_1786, aes(x = Farm.x, y = percent, fill = gender)) + geom_bar(position = position_dodge(), stat = "identity") + theme(axis.text.x=element_text(angle = 90, hjust = 0)) + ggtitle("Gender Ratio on Mount Vernon Farms in 1786")
 
 ```
 
@@ -361,6 +365,5 @@ gender_1799 <- gender_1799_females %>%
   mutate(Percent_of_Female = Females/Total * 100) %>%
   gather(gender, percent, Percent_of_Male:Percent_of_Female)
 
-ggplot(data = gender_1799, aes(x = Farm.y, y = percent, fill = gender)) + geom_bar(position = position_dodge(), stat = "identity") + theme(axis.text.x=element_text(angle = 90, hjust = 0)) + ggtitle("Gender Ratio on Mount Vernon Farms in 1799")
-
+gender_1799_plot <- ggplot(data = gender_1799, aes(x = Farm.y, y = percent, fill = gender)) + geom_bar(position = position_dodge(), stat = "identity") + theme(axis.text.x=element_text(angle = 90, hjust = 0)) + ggtitle("Gender Ratio on Mount Vernon Farms in 1799")
 ```
