@@ -1,7 +1,7 @@
 ---
 title: "Network Analysis of the Enslaved Community at Mount Vernon, 1786-1799"
 author: "Sara Collini"
-date: "December 3, 2014"
+date: "December 10, 2014"
 output: html_document
 ---
 
@@ -85,8 +85,9 @@ head(slave_vertex)
 ```{r}
 igraph.options(vertex.size=3, 
                edge.arrow.size=.5)
-set.seed(33)
+set.seed(5)
 plot(slave_graph, vertex.label = NA)
+title("Slave Families on Mount Vernon, 1786 - 1799")
 ```
 Immediately, the overall kinship structure of the enslaved community is apparent from this network graph. Four family groups comprise one large familial relation and several smaller groups also exist. Many slaves had no kinship relations (no known kinship relations) and some slaves were only connected to one or two other people. In order to analyze this information further, we must be able to visualize the vertex attributes and the different kinship relationships.
 
@@ -96,8 +97,9 @@ In order to visualize the gender of the slaves, we can change the shape of each 
 V(slave_graph)$shape <- ifelse(slave_vertex$Gender == "Female", "circle", 
                                ifelse(slave_vertex$Gender == "Male", "square", 
                                       "rectangle"))
-set.seed(33)
+set.seed(5)
 plot(slave_graph, vertex.label = NA)
+title("Visualizing Gender")
 ```
 Females are circles, while males are squares. 
 
@@ -114,10 +116,14 @@ lookup_edge <- function(relationship) {
 lookup_edge <- Vectorize(lookup_edge, USE.NAMES = FALSE)
 
 E(slave_graph)$color <- lookup_edge(E(slave_graph)$relationship)
-set.seed(33)
+set.seed(5)
 plot(slave_graph, 
      vertex.label = NA,      
      vertex.size = 3)
+title("Visualizing Kinship Relations")
+legend("bottomleft", legend = c("Spouse", "Child", "Sibling"),
+       col = c("red", "orange", "blue"), pch = 19,   
+               title = "Kinship Relation")
 ```
 The network graph is easier to decipher. We can see that the one large family is connected by a slave marriage. Many of the two person families are slave marriages, while others are mother and child. With this graph, we can count the number of each relationship and know where they exist within each family. 
 
@@ -145,7 +151,7 @@ Five Farms made up the Mount Vernon estate: Mansion House, Muddy Hole, Dogue Run
 ##Slave Families Across Farms in 1786
 ```{r}
 V(slave_graph)$color <- lookup_color(slave_vertex$Farm.x)
-set.seed(33)
+set.seed(5)
 
 plot(slave_graph, 
      vertex.label = NA,      
@@ -170,14 +176,14 @@ We can use a simple bar plot to show the percentages of each family structure:
 structures_1786 <- structures %>%
   filter(Census == "1786")
 
-ggplot(data = structures_1786, aes(x = Family.structure, y = Percent)) + facet_wrap(~Farm) + geom_bar(stat = "identity", fill = "darkblue") + theme(axis.text.x=element_text(angle = 90, hjust = 0)) 
+ggplot(data = structures_1786, aes(x = Family.structure, y = Percent)) + facet_wrap(~Farm) + geom_bar(stat = "identity", fill = "darkblue") + theme(axis.text.x=element_text(angle = 90, hjust = 0)) + ggtitle("1786 Family Structures")
 ```
 From this plot, we can see that almost every farm and the entire estate had a majority of single person structures. 
 
 ##Slave Families Across Farms in 1799
 ```{r}
 V(slave_graph)$color <- lookup_color(slave_vertex$Farm.y)
-set.seed(33)
+set.seed(5)
 
 plot(slave_graph, 
      vertex.label = NA,      
@@ -191,7 +197,7 @@ legend("bottomleft", legend = c("Mansion House", "Muddy Hole", "Dogue Run", "Uni
 ###1799 Family Structures
 Let's plot the four family structures for 1799 next to the 1786 figures:
 ```{r}
-ggplot(data = structures, aes(x = Family.structure, y = Percent, fill = Census)) + facet_wrap(~Farm) + geom_bar(stat = "identity", position = "dodge") + theme(axis.text.x=element_text(angle = 90, hjust = 0)) 
+ggplot(data = structures, aes(x = Family.structure, y = Percent, fill = Census)) + facet_wrap(~Farm) + geom_bar(stat = "identity", position = "dodge") + theme(axis.text.x=element_text(angle = 90, hjust = 0)) + ggtitle("1786 and 1799 Family Structures Compared")
 ```
 Immediately, we see the increase in the percentage of two-parent family strucutres in just 13 years. Single person structures still dominate on Mansion House and Union Farm, but every farm and the overall estate increases in two-parent families. 
 
@@ -211,28 +217,39 @@ sizes(comm)
 We can inspect each community in the graph and list the names of each family member.
 ```{r}
 memb <- membership(comm)
-names(memb[memb ==2])
+names(memb[memb ==4])
 ```
 
 We can also show the kinship network graph colored by each family group.
 ```{r}
-set.seed(33)
+set.seed(5)
 plot(slave_graph, vertex.label = NA, vertex.color = memb, vertex.size = 3)
 title("Families detected by walktrap.community()")
 ```
 
 ```{r}
-set.seed(33)
+set.seed(5)
 plot(comm, slave_graph, vertex.label = NA, vertex.size = 2)
 title("Families detected by walktrap.community()")
+```
+
+##Summary Statistics
+```{r}
+neighbors(slave_graph, 1)
+#list.graph.attributes(slave_graph)
+vcount(slave_graph)
+ecount(slave_graph)
+neighborhood(slave_graph, 1, nodes=V(slave_graph))
+graph.neighborhood(slave_graph, 1, nodes=V(slave_graph))
+
 ```
 
 ##Family Tree
 In order to see how each slave is connected within a family, we can show a subgraph of the larger network graph in a different layout. We will use community 2 for this example.
 ```{r}
-induced.subgraph(slave_graph, which(membership(comm) ==2)) %>%
-  plot(layout = layout.reingold.tilford, vertex.label = names(memb[memb == 2]))
-title("Community 2 among Mount Vernon")
+induced.subgraph(slave_graph, which(membership(comm) %in% c(4,6,10))) %>% plot()
+set.seed(5)
+title("Communities 4, 6, and 10 among Mount Vernon")
 legend("bottomleft", legend = c("Spouse", "Child", "Sibling"),
        col = c("red", "orange", "blue"), pch = 19,   
        title = "Relationship")
