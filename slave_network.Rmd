@@ -233,22 +233,12 @@ plot(comm, slave_graph, vertex.label = NA, vertex.size = 2)
 title("Families detected by walktrap.community()")
 ```
 
-##Summary Statistics
-```{r}
-neighbors(slave_graph, 1)
-#list.graph.attributes(slave_graph)
-vcount(slave_graph)
-ecount(slave_graph)
-neighborhood(slave_graph, 1, nodes=V(slave_graph))
-graph.neighborhood(slave_graph, 1, nodes=V(slave_graph))
-
-```
-
 ##Family Tree
 In order to see how each slave is connected within a family, we can show a subgraph of the larger network graph in a different layout. We will use community 2 for this example.
 ```{r}
-induced.subgraph(slave_graph, which(membership(comm) %in% c(4,6,10))) %>% plot()
-set.seed(5)
+induced.subgraph(slave_graph, which(membership(comm) %in% c(4,6,10))) %>% 
+  plot()
+set.seed(20)
 title("Communities 4, 6, and 10 among Mount Vernon")
 legend("bottomleft", legend = c("Spouse", "Child", "Sibling"),
        col = c("red", "orange", "blue"), pch = 19,   
@@ -267,3 +257,77 @@ legend("bottomleft", legend = c("Spouse", "Child", "Sibling"),
 ```
 This graph shows that Daphne B and Simms A are spouses with three children: Maria A, Matilda B, and Polly A. The women live on Union Farm, but Simms A lives on Mansion House farm. This means that Daphne B and Simms A would have traveled across these two farms in order to see each other. Simms A belongs to two different communities: his family and the Mansion House working community. 
 
+#Summary Statistics
+
+##Marriages
+```{r, eval=FALSE}
+marriages <- slaverel %>%
+  filter(relationship == "Spouse")
+
+slave_graph_marriages <- graph.data.frame(marriages, directed = "FALSE")
+
+slave_marriages_vertex <- data_frame(name = V(slave_graph_marriages)$name) %>%
+  left_join(total_slave, by = c("name" = "id"))
+
+V(slave_graph_marriages)$shape <- ifelse(slave_marriages_vertex$Gender == "Female", "circle", 
+                               ifelse(slave_marriages_vertex$Gender == "Male", "square", 
+                                      "rectangle"))
+
+E(slave_graph_marriages)$color <- lookup_edge(E(slave_graph_marriages)$relationship)
+V(slave_graph_marriages)$color <- lookup_color(slave_marriages_vertex$Farm.y)
+plot(slave_graph_marriages, vertex.label = NA) 
+title("Slave Marriages on Mount Vernon, 1799")
+```
+
+```{r, eval=FALSE}
+mar <- walktrap.community(slave_graph_marriages)
+length(mar)
+membmar <- membership(mar)
+names(membmar[membmar ==1])
+induced.subgraph(slave_graph_marriages, which(membership(mar) == 1)) %>% plot()
+```
+
+
+##Children
+```{r}
+children_1786 <- slave_1786 %>%
+  filter(Skill == "Child") %>%
+  group_by(Farm) %>%
+  summarize(Number = n()) %>%
+  mutate(Percent = Number/89 * 100)
+```
+
+```{r}
+children_1799 <- slave_1799 %>%
+  filter(Skill == "Child") %>%
+  group_by(Farm) %>%
+  summarize(Number = n()) %>%
+  mutate(Percent = Number/117 * 100)
+```
+
+##Gender Ratio
+```{r}
+gender_1786_females <- slave_vertex %>%
+  filter(Census.x == "1786") %>%
+  filter(Skill.x != "Child") %>%
+  filter(Gender == "Female") %>%
+  group_by(Farm.x) %>%
+  summarize(Females = n()) 
+
+gender_1786_males <- slave_vertex %>%
+  filter(Census.x == "1786") %>%
+  filter(Skill.x != "Child") %>%
+  filter(Gender == "Male") %>%
+  group_by(Farm.x) %>%
+  summarize(Males = n())
+
+gender_1786 <- gender_1786_females %>%
+   left_join(gender_1786_males, by = "Farm.x") %>%
+  mutate(Total = Females + Males) %>%
+  mutate(Percent_of_Male = Males/Total * 100) %>%
+  mutate(Percent_of_Female = Females/Total * 100) %>%
+  gather(gender, percent, Percent_of_Male:Percent_of_Female)
+
+ggplot(data = gender_1786, aes(x = Farm.x, y = percent, fill = gender)) + geom_bar(position = position_dodge(), stat = "identity") + theme(axis.text.x=element_text(angle = 90, hjust = 0)) + ggtitle("Gender Ratio on Mount Vernon Farms in 1786")
+
+```
