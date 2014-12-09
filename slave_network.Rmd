@@ -295,6 +295,9 @@ children_1786 <- slave_1786 %>%
   group_by(Farm) %>%
   summarize(Number = n()) %>%
   mutate(Percent = Number/89 * 100)
+
+ggplot(data = children_1786, aes(x = Farm, y = Percent)) + geom_bar(stat = "identity") + theme(axis.text.x=element_text(angle = 90, hjust = 0)) + ggtitle("Ratio of Children on Mount Vernon Farms in 1786")
+
 ```
 
 ```{r}
@@ -303,9 +306,11 @@ children_1799 <- slave_1799 %>%
   group_by(Farm) %>%
   summarize(Number = n()) %>%
   mutate(Percent = Number/117 * 100)
+
+ggplot(data = children_1799, aes(x = Farm, y = Percent)) + geom_bar(stat = "identity") + theme(axis.text.x=element_text(angle = 90, hjust = 0)) + ggtitle("Ratio of Children on Mount Vernon Farms in 1799")
 ```
 
-##Gender Ratio
+##Gender Ratios 
 ```{r}
 gender_1786_females <- slave_vertex %>%
   filter(Census.x == "1786") %>%
@@ -329,5 +334,33 @@ gender_1786 <- gender_1786_females %>%
   gather(gender, percent, Percent_of_Male:Percent_of_Female)
 
 ggplot(data = gender_1786, aes(x = Farm.x, y = percent, fill = gender)) + geom_bar(position = position_dodge(), stat = "identity") + theme(axis.text.x=element_text(angle = 90, hjust = 0)) + ggtitle("Gender Ratio on Mount Vernon Farms in 1786")
+
+```
+
+```{r}
+gender_1799_females <- slave_vertex %>%
+  filter(Census.y == "1799") %>%
+  filter(Skill.y != "Child") %>%
+  filter(Gender == "Female") %>%
+  filter(Farm.y != "NA") %>%
+  group_by(Farm.y) %>%
+  summarize(Females = n()) 
+
+gender_1799_males <- slave_vertex %>%
+  filter(Census.y == "1799") %>%
+  filter(Skill.y != "Child") %>%
+  filter(Gender == "Male") %>%
+  filter(Farm.y != "NA") %>%
+  group_by(Farm.y) %>%
+  summarize(Males = n())
+
+gender_1799 <- gender_1799_females %>%
+   left_join(gender_1799_males, by = "Farm.y") %>%
+  mutate(Total = Females + Males) %>%
+  mutate(Percent_of_Male = Males/Total * 100) %>%
+  mutate(Percent_of_Female = Females/Total * 100) %>%
+  gather(gender, percent, Percent_of_Male:Percent_of_Female)
+
+ggplot(data = gender_1799, aes(x = Farm.y, y = percent, fill = gender)) + geom_bar(position = position_dodge(), stat = "identity") + theme(axis.text.x=element_text(angle = 90, hjust = 0)) + ggtitle("Gender Ratio on Mount Vernon Farms in 1799")
 
 ```
