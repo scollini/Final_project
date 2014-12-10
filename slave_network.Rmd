@@ -5,16 +5,19 @@ date: "December 10, 2014"
 output: html_document
 ---
 
+
 #Introduction
-This project explores the kinship relations of the Mount Vernon enslaved community from 1786-1799. Currently, there is great interest in studying the enslaved community on George Washington's estate, such as archaeology of the slave cemetery, the physical spaces in which the slaves lived, their labor, free time, and Washington’s role as a slave owner. The Fred W. Smith National Library for the Study of George Washington staff is currently building a slavery database, in which every mention of every slave that lived, worked, or had some part at Mount Vernon is entered. The documents include farm reports, wills, letters, diaries, censuses, etc. In order to track all of the unique people, they generated a spreadsheet compiling every census taken of the slaves. 
+This project explores the kinship relations of the Mount Vernon enslaved community from 1786-1799. Currently, there is great interest in studying the enslaved community on George Washington's estate, such as archaeology of the slave cemetery, the physical spaces in which the slaves lived, their labor, free time, and Washington’s role as a slave owner.[1] The Fred W. Smith National Library for the Study of George Washington staff is currently building a slavery database, in which every mention of every slave that lived, worked, or had some part at Mount Vernon is entered. The documents include farm reports, wills, letters, diaries, censuses, etc. In order to track all of the unique people, they generated a spreadsheet compiling every census taken of the slaves.[2] 
 
-The census is relatively complete, with farm location, estimated age, skill, spouses, and mothers. This project draws from that data in order to explore the kinship relations from the two most complete censuses: 1786 and 1799. We can parse out parent/child, sibling, and spousal relationships. This project examines the network of known kinship relationships on the estate, the overall structure of the enslaved community, and how it changes in those 13 years. Hopefully, a better and more complete picture of the Mount Vernon enslaved community will arise. 
+The census is relatively complete, with farm location, estimated age, skill, spouses, and mothers. This project draws from that data in order to explore the kinship relations from the two most complete censuses: 1786 and 1799. We can parse out parent/child, sibling, and spousal relationships. This project examines the network of known kinship relationships on the estate, the overall structure of the enslaved community, and how it changes in those thirteen years. Hopefully, a better and more complete picture of the Mount Vernon enslaved community will arise. 
 
-HISTORIOGRAPHY
+In the historiography of eighteenth-century slavery, a few studies of kinship structures on Chesapeake plantations exist. In his monograph, Slave Counterpoint, Philip D. Morgan argues that the number of slave kinship ties increased and grew more stable throughout the eighteenth-century. He measured this stability mainly by the number of two-parent slave households and single slaves. Two-parent families dominated and single slaves decreased.[3] Mobility also affected this stabilization, as those slaves not moving long distances experienced more stable, local kinship ties. This family stability varies according to plantation size and the owner’s views on slavery, of course, but Morgan states that larger plantations experienced more stable relationships by the late eighteenth-century, especially if the owner no longer sold or bought any slaves, thereby not disrupting families.[4] 
 
 These slave kinship relations are difficult to study, because the source base is so minimal. If plantation censuses do exist, they are usually fragmentary. Because Washington kept a relatively complete record of his slaves' information, we can learn quite a bit from studying the kinship network and community structure of the Mount Vernon slaves. 
 
-A note on definitions/ terms: Slaves could not legally marry. A “husband” or “wife” listed on the census does not necessarily mean the same thing as a legal marriage, nor does it imply behaviors associated with legal marriage. A structure of two parents or a single parent with children does not necessarily constitute a traditional family, as perceived by a slave. Additionally, polygyny and polyandry were common. We cannot assume blood relations or a slave’s perspective when no direct sources exist. Hoever, in order to analyze the community, I have decided to call the ties “kinship or familial relationships” that make up “family structures”.
+A note on definitions/ terms: Slaves could not legally marry.[5] A “husband” or “wife” listed on the census does not necessarily mean the same thing as a legal marriage, nor does it imply behaviors associated with legal marriage. A structure of two parents or a single parent with children does not necessarily constitute a traditional family, as perceived by a slave. Additionally, polygyny and polyandry were common.[6] We cannot assume blood relations or a slave’s perspective when no direct sources exist. However, in order to analyze the community, I have decided to call the ties “kinship or familial relationships” that make up “family structures”.
+
+#Network Analysis
 
 First, we load the necessary libraries.
 ```{r}
@@ -26,9 +29,10 @@ library(historydata)
 library(ggplot2)
 ```
 
-#Data Manipulation
+##Data Manipulation
+I cleaned the data from the compiled census with Open Refine in order to make it amenable to computation.[7] If differing birth years existed, I chose the 1799 year. I created a new row or observation for each slave on each census, including any changes in skill or farm. Additionally, I only included those slaves known for certain on the two censuses. 
 
-##Read in the data
+###Read in the Data
 The data for this project exists in three csv files. The first file contains every slave with at least one kinship relation on Mount Vernon, from 1786-1799
 .
 ```{r}
@@ -43,15 +47,15 @@ total_slave <- read.csv("~//Desktop/Clio-3/finalproject/clean.csv", stringsAsFac
 head(total_slave)
 ```
 
-This file contains both the 1786 and 1799 censuses with the relevant slaves. This means the slaves present in both censuses are repeated but might have a different skill or farm. 
+The third file contains both the 1786 and 1799 censuses with the relevant slaves. This means the slaves present in both censuses are repeated but might have a different skill or farm. 
 ```{r}
 slave_census <- read.csv("~//Desktop/Clio-3/finalproject/census.csv", stringsAsFactors = FALSE) %>%
   select(id, Gender, Birth.Year, Skill, Farm, Census, Owner)
 head(slave_census)
 ```
 
-##Data Joining 
-Next, we must separate out the two most important and complete censuses: 1786 and 1799. We select only the variables that change between the two censuses. 
+###Joining the Data
+Next, we must separate out the two most important and complete censuses: 1786 and 1799. We use the dplyr package to filter out the census year and to select only the variables that change between the two censuses. 
 ```{r}
 slave_1786 <- slave_census %>%
   filter(Census == "1786") %>%
@@ -63,7 +67,7 @@ slave_1799 <- slave_census %>%
 ```
 
 
-Join the two censuses into one dataframe by the "id" variable in order to access that information on the network graph. 
+We can join the two censuses into one dataframe by the "id" variable (column name) in order to access that information on the network graph. 
 ```{r}
 total_slave <- total_slave %>%
   left_join(slave_1786, by = "id") %>%
@@ -71,8 +75,8 @@ total_slave <- total_slave %>%
 head(total_slave)
 ```
 
-#Create a Graph Object
-We create a graph object of the slaverel dataframe in order to graph the kinship relations between the slaves.
+##Create a Graph Object
+We create a graph object of the slave relationships dataframe (slaverel) in order to graph the kinship relations between the slaves. Since this is a kinship network graph, it is undirected.
 ```{r}
 slave_graph <- graph.data.frame(slaverel, directed = "FALSE")
 ```
@@ -89,18 +93,19 @@ slave_vertex <- data_frame(name = V(slave_graph)$name) %>%
 head(slave_vertex)
 ```
 
-#Plotting the First Network Graph
+##Plotting the First Network Graph
+In order to make a more discernible network graph, set the vertex size to 3 and remove the vertex labels in the plot function. The set.seed function keeps the graph in the same position, so it does not rotate every time the graph is plotted.
 ```{r}
 igraph.options(vertex.size=3, 
                edge.arrow.size=.5)
 set.seed(5)
 plot(slave_graph, vertex.label = NA)
-title("Slave Families on Mount Vernon, 1786 - 1799")
+title("Slave Family Structures on Mount Vernon, 1786 - 1799")
 ```
-Immediately, the overall kinship structure of the enslaved community is apparent from this network graph. Four family groups comprise one large familial relation and several smaller groups also exist. Many slaves had no kinship relations (no known kinship relations) and some slaves were only connected to one or two other people. In order to analyze this information further, we must be able to visualize the vertex attributes and the different kinship relationships.
+Immediately, the overall kinship structure of the enslaved community is apparent. It seems that three family structures comprise one large family structure and several smaller structures exist, as well. Many slaves had no kinship relations (no known kinship relations) and some slaves were only connected to one or two other people. This graph tells us a lot, but in order to analyze this information further, we must be able to visualize the vertex attributes and the different kinship relationships.
 
-##Gender
-In order to visualize the gender of the slaves, we can change the shape of each vertex accordingly.
+###Visualizing Gender
+In order to visualize the gender of the slaves, we can change the shape of each vertex accordingly. We use a simple ifelse function to iterate over the Gender attribute in the slave_vertex dataframe and assign circles or squares to the respective gender. The rectangle shape is added in case any gender is not listed as male or female, ie missing.
 ```{r}
 V(slave_graph)$shape <- ifelse(slave_vertex$Gender == "Female", "circle", 
                                ifelse(slave_vertex$Gender == "Male", "square", 
@@ -109,10 +114,10 @@ set.seed(5)
 plot(slave_graph, vertex.label = NA)
 title("Visualizing Gender")
 ```
-Females are circles, while males are squares. 
+This graph is more helpful, as it allows us to begin thinking about gender ratios on the farms. However, the edges between them are not meaningful unless we can visualize them. 
 
-##Relationships
-In order to visualize the different kinships relations, we can colorize the edges according to type of relation with a function.
+###Relationships
+In order to visualize the different kinships relations, we can colorize the edges according to type of relation with a function. We can adapt the lookup function for vertex attributes created by Lincoln Mullen to edge attributes. [7] It returns a color based on the relationship.
 ```{r}
 lookup_edge <- function(relationship) {
   if(relationship == "Spouse") return("red")
@@ -133,11 +138,11 @@ legend("bottomleft", legend = c("Spouse", "Child", "Sibling"),
        col = c("red", "orange", "blue"), pch = 19,   
                title = "Kinship Relation")
 ```
-The network graph is easier to decipher. We can see that the one large family is connected by a slave marriage. Many of the two person families are slave marriages, while others are mother and child. With this graph, we can count the number of each relationship and know where they exist within each family. 
+The network graph is easier to decipher. We can see that the one large family is connected by a slave marriage. Many of the two person family structures are slave marriages, while others are mother and child. With this graph, we can count the number of each relationship and know where they exist within each family. 
 
 
-#Evolution of Kinship Networks in Space
-Since both slave censuses taken by Washington list the farms that each slave lived and worked on, we can use that variable to locate the slave families within the estate. We use a function similar to the edge coloring function:
+##Evolution of Kinship Networks in Space
+Since both slave censuses taken by Washington list the farms that each slave lived and worked on, we can use that variable to locate the slave families within the estate. Five farms made up the estate: Mansion House, Muddy Hole, Dogue Run, Union Farm, and River Farm.[8] We use the lookup function again to colorize the vertices based on the farm:
 ```{r}
 lookup_color <- function(type) {
   if(is.na(type)) return("gray")
@@ -154,9 +159,10 @@ lookup_color <- function(type) {
 
 lookup_color <- Vectorize(lookup_color, USE.NAMES = FALSE)
 ```
-Five Farms made up the Mount Vernon estate: Mansion House, Muddy Hole, Dogue Run, Union Farm, and River Farm. Most slaves married and had kinship relations within Washington's slave community. However, some slaves married people owned by others. I have colored those non-Mount Vernon slave spouses brown. The gray color represents slaves that were not active on each census, meaning that they were not born yet or had died. 
+Some slaves married people living on other plantations. I colored them brown for non-local people. Most slaves married and had kinship relations within Washington's slave community. The gray color represents slaves that were not active on each census, meaning that they were not born yet, had died, or have unknown locations. 
 
-##Slave Families Across Farms in 1786
+###Slave Family Structures Across Farms in 1786
+We can graph only those family structures existing in 1786. This will allow us to examine change over time and to see if the stability of the enslaved community increases over time, following Morgan's argument. We designate the 1786 census by accessing the Farm.x variable in the slave_vertex dataframe. 
 ```{r}
 V(slave_graph)$color <- lookup_color(slave_vertex$Farm.x)
 set.seed(5)
@@ -164,12 +170,12 @@ set.seed(5)
 plot(slave_graph, 
      vertex.label = NA,      
      vertex.size = 3)
-title("Slave Families on Mount Vernon Farms in 1786")
+title("Slave Family Structures on Mount Vernon Farms in 1786")
 legend("bottomleft", legend = c("Mansion House", "Muddy Hole", "Dogue Run", "Union Farm", "River Farm", "Other Farm", "Not Active"),
        col = c("purple", "blue", "green", "orange", "yellow", "brown", "gray"), pch = 19,   
                title = "Farm")
 ```
-This graph tells us a lot more information. We can place the slave families in space on the estate and organize the various family structures. 
+This graph tells us a lot more information. We can place the slave families in space on the estate and organize the various family structures. Many slaves were not yet born. 
 
 ###1786 Family Structures 
 From this graph, four types of family structures arise: singles, one parent, two parent, and couples with no known children. We can plot the numbers of each family structure for the entire estate, as well as the individual farms. We will use ggplot2 bar graphs to plot this information drawn from the network graph into a csv.
@@ -182,13 +188,14 @@ head(structures)
 We can use a simple bar plot to show the percentages of each family structure:
 ```{r}
 structures_1786 <- structures %>%
-  filter(Census == "1786")
+  filter(Census == "Percent_1786")
 
 ggplot(data = structures_1786, aes(x = Family.structure, y = Percent)) + facet_wrap(~Farm) + geom_bar(stat = "identity", fill = "darkblue") + theme(axis.text.x=element_text(angle = 90, hjust = 0)) + ggtitle("1786 Family Structures")
 ```
-From this plot, we can see that almost every farm and the entire estate had a majority of single person structures. 
+From this plot, we can see that almost every farm and the entire estate had a majority of single person family structures. This seems to follow the same pattern that Morgan outlined, but we need to examine the 1799 network graph. 
 
-##Slave Families Across Farms in 1799
+###Slave Family Structures Across Farms in 1799
+We can access the 1799 census information with the Farm.y variable. 
 ```{r}
 V(slave_graph)$color <- lookup_color(slave_vertex$Farm.y)
 set.seed(5)
@@ -196,18 +203,19 @@ set.seed(5)
 plot(slave_graph, 
      vertex.label = NA,      
      vertex.size = 3)
-title("Slave Families on Mount Vernon Farms in 1799")
+title("Slave Family Structures on Mount Vernon Farms in 1799")
 legend("bottomleft", legend = c("Mansion House", "Muddy Hole", "Dogue Run", "Union Farm", "River Farm", "Other Farm", "Not Active"),
        col = c("purple", "blue", "green", "orange", "yellow", "brown", "gray"), pch = 19,   
        title = "Farm")
 ```
+Immediately, we can see that many people were born between 1786 and 1799.
 
 ###1799 Family Structures
-Let's plot the four family structures for 1799 next to the 1786 figures:
+Let's plot the four family structures for 1799 next to the 1786 figures in order to examine change over time. We can use the position dodge in ggplot to plot the two censuses next to each other on the chart.
 ```{r}
 ggplot(data = structures, aes(x = Family.structure, y = Percent, fill = Census)) + facet_wrap(~Farm) + geom_bar(stat = "identity", position = "dodge") + theme(axis.text.x=element_text(angle = 90, hjust = 0)) + ggtitle("1786 and 1799 Family Structures Compared")
 ```
-Immediately, we see the increase in the percentage of two-parent family strucutres in just 13 years. Single person structures still dominate on Mansion House and Union Farm, but every farm and the overall estate increases in two-parent families. 
+The increase in the percentage of two-parent family strucutres in just 13 years stands out. Single person structures still dominate on Mansion House and Union Farm, but every farm and the overall estate increases in two-parent families. These findings definitely follow Philip Morgan's argument that by the late eighteenth-century, two-parent families dominated and single persons decreased. 
 
 #Community Detection
 We can use the community detection methods in R in order to focus on each family grouping in 1799.
@@ -215,9 +223,9 @@ We can use the community detection methods in R in order to focus on each family
 comm <- walktrap.community(slave_graph)
 length(comm)
 ```
-The walktrap.community DESCRIBE and calculates 119 slave family groups on Mount Vernon in 1799. This is not completely accurate, as the largest family is counted as 4 groups. A more nuanced analysis of the number and definition of family groupings is needed for this data, but the exploring the individual groups is helpful. 
+The walktrap.community, according to the igraph documentation, "finds densely connected subgraphs" and calculates 119 slave family groups on Mount Vernon in 1799.[10] This is not completely accurate, as the largest family is counted as three groups. A more nuanced analysis of the number and definition of family groupings is needed for this data, but the exploring the individual groups is helpful. For this specific analysis, we would need a family structure detection algorithm to find what we have defined as a family structure. 
 
-We can also calculate the size of each of the family groups.
+We can calculate the size of each of the family groups.
 ```{r}
 sizes(comm)
 ```
@@ -225,7 +233,7 @@ sizes(comm)
 We can inspect each community in the graph and list the names of each family member.
 ```{r}
 memb <- membership(comm)
-names(memb[memb ==4])
+names(memb[memb ==53])
 ```
 
 We can also show the kinship network graph colored by each family group.
@@ -242,7 +250,7 @@ title("Families detected by walktrap.community()")
 ```
 
 ##Family Tree
-In order to see how each slave is connected within a family, we can show a subgraph of the larger network graph in a different layout. We will use community 2 for this example.
+In order to see how each slave is connected within a family, we can show a subgraph of the larger network graph in a different layout. We will use the large community comprised of community 4, 6 and 10 for this example. 
 ```{r}
 induced.subgraph(slave_graph, which(membership(comm) %in% c(4,6,10))) %>% 
   plot()
@@ -252,23 +260,28 @@ legend("bottomleft", legend = c("Spouse", "Child", "Sibling"),
        col = c("red", "orange", "blue"), pch = 19,   
        title = "Relationship")
 ```
-This graph is not the most visually appealing, nor does it show a true family tree in chronological and hierarchical order. Suckey Bay and NA9 are married and have three children: Nancy G, Nancy H, and Rose A. Rose A has four childern of her own: Hagar A, Joe D, Simon A, and Tom C. This entire family does reside on River Farm in 1799, except Suckey Bay's spouse, who is unknown. This subgraph does show a two generational family living and working on the same farm in 1799. They are all connected by their familial ties, as well as their working community.  
+By graphing a smaller network graph and colorizing the vertex and edge attributes, we can see that this one large family is connected by two slave marriages. Two of Kitty A's daughters, Mima A and Alla A, married other slaves on Mansion House. The husbands also belonged to their own family structures on different farms. Mima A's husband, Godfrey A, was a carter in 1799 and resided on Mansion House farm. He was born on Union Farm. Alla A's husband, James B, was also a carter in 1799 on Mansion House farm. He was born on River Farm. Both Godfrey A and James B moved to Mansion House with their skill as a carter and married into Kitty A's family on Mansion House, connecting all three family structures. Clearly, learning specific skills and moving to different local farms improved family stability. 
 
-Let's explore a smaller family
+Additionally, Doll C is James B's mother, and Betty A is Godfrey A's mother. Godfrey A and Mima A had two children together, and one of Doll C's daughters also had a child. This is a three-generational family for all three families. They all mainly reside on the same farm but are all connected through kinship and their working communities. 
+
+
+Let's explore a smaller family. We can use the same induced.subgraph function to locate any family identified by the community detection methods:
 ```{r}
-induced.subgraph(slave_graph, which(membership(comm) == 32)) %>%
-  plot(layout = layout.reingold.tilford, vertex.label = names(memb[memb == 32]))
-title("Community 32 among Mount Vernon")
+induced.subgraph(slave_graph, which(membership(comm) == 53)) %>%
+  plot(layout = layout.reingold.tilford, vertex.label = names(memb[memb == 53]))
+title("Community 53 among Mount Vernon")
 legend("bottomleft", legend = c("Spouse", "Child", "Sibling"),
        col = c("red", "orange", "blue"), pch = 19,   
        title = "Relationship")
 ```
-This graph shows that Daphne B and Simms A are spouses with three children: Maria A, Matilda B, and Polly A. The women live on Union Farm, but Simms A lives on Mansion House farm. This means that Daphne B and Simms A would have traveled across these two farms in order to see each other. Simms A belongs to two different communities: his family and the Mansion House working community. 
+This graph, though quite a bit smaller, shows that Daphne B and Simms A are spouses with three children: Maria A, Matilda B, and Polly A. The women live on Union Farm, but Simms A lives on Mansion House farm. This means that Daphne B and Simms A would have traveled across these two farms in order to see each other. Simms A belongs to two different communities: his family and the Mansion House working community. This small family follows Morgan's pattern, as both spouses were local to Mount Vernon. 
 
 #Summary Statistics
+We can also produce summary statistics for marriages, children, and the gender ratio for each farm using the dplyr library. 
 
 ##Marriages
-```{r, eval=FALSE}
+In order to examine and visualize the marriages, combining both the two-parent and couples without children family structures, we can simply plug in the relevant data to code we used previously. We filter out the spouse relationship in the slaverel dataframe then convert that to a graph object. Next, we use left_join to merge the census information to the graph object. Then, we can change the shapes of the gender as before and colorize the vertices according to farm. We can explore how many marriages occurred on the same farm, how many occurred locally, and how many known marriages occurred across plantations.
+```{r}
 marriages <- slaverel %>%
   filter(relationship == "Spouse")
 
@@ -282,20 +295,44 @@ V(slave_graph_marriages)$shape <- ifelse(slave_marriages_vertex$Gender == "Femal
                                       "rectangle"))
 
 E(slave_graph_marriages)$color <- lookup_edge(E(slave_graph_marriages)$relationship)
+V(slave_graph_marriages)$color <- lookup_color(slave_marriages_vertex$Farm.x)
+plot(slave_graph_marriages, vertex.label = NA) 
+title("Slave Marriages on Mount Vernon, 1786")
+```
+
+By using walktrap.community again, we can calculate how many marriages of each type occurred in each census and examine change over time. These are, of course, only the known marriages identified so far by Washington in the censuses and by the Mount Vernon library staff in the George Washington papers. 
+```{r}
+mar <- walktrap.community(slave_graph_marriages)
+length(mar)
+membmar <- membership(mar)
+names(membmar[membmar ==61])
+induced.subgraph(slave_graph_marriages, which(membership(mar) == 61)) %>% plot()
+```
+
+```{r}
 V(slave_graph_marriages)$color <- lookup_color(slave_marriages_vertex$Farm.y)
 plot(slave_graph_marriages, vertex.label = NA) 
 title("Slave Marriages on Mount Vernon, 1799")
 ```
 
-```{r, eval=FALSE}
+```{r}
 mar <- walktrap.community(slave_graph_marriages)
 length(mar)
 membmar <- membership(mar)
-names(membmar[membmar ==1])
-induced.subgraph(slave_graph_marriages, which(membership(mar) == 1)) %>% plot()
+names(membmar[membmar ==61])
+induced.subgraph(slave_graph_marriages, which(membership(mar) == 61)) %>% plot()
 ```
 
+```{r}
+marriages <- read.csv("~//Desktop/Clio-3/finalproject/marriages.csv", stringsAsFactors = FALSE)
+
+ggplot(data = marriages, aes(x = marriage, y = percent, fill = year)) + geom_bar(position = position_dodge(), stat = "identity") + theme(axis.text.x=element_text(angle = 90, hjust = 0)) + ggtitle("Types of Marriages on Mount Vernon, 1786-1799")
+
+```
+This data is somewhat misleading, because I counted the unknown spouses as cross plantation marriages. This might not be true. We also do not know exactly when slaves married. Nevertheless, the important thing to draw from this graph is that the same farm and local farm marriages made up a majority of the slave marriages in the late eighteenth-century. Though the number of local farm marriages increased by 1799, local mobility was a factor in the stabilization of slave kinship relations. Marrying someone on another Mount Vernon farm implies relatively easy access on a regular basis. The decrease in the number of same farm marriages and increase in local farm marriages might result from George Washington renting those slaves from Penelope French in 1786 and introducing those people into the community. 
+
 ##Children
+In order to analyze the ratio of children on each farm, we can filter, group by and select the number of children for each farm for each census. Next, we summarize the numbers per farm and mutate the percentage, or divide the number of children on each farm by the total number of children on the estate. The resulting number is the percent of the children population on each farm. We can examine this percentage over time by plotting the data to a simple bar chart in ggplot2.
 ```{r}
 children_1786 <- slave_1786 %>%
   filter(Skill == "Child") %>%
@@ -313,8 +350,10 @@ children_1799 <- slave_1799 %>%
 
 ggplot(data = children_1799, aes(x = Farm, y = percent, fill = census)) + geom_bar(position = position_dodge(), stat = "identity") + theme(axis.text.x=element_text(angle = 90, hjust = 0)) + ggtitle("Ratio of Children on Mount Vernon Farms, 1786-1799")
 ```
+For most farms, the ratio of children increases. The anomaly is River Farm, as it drastically decreases in the number of children. This might result from a high infant mortality rate or a high number of aging slaves on this particular farm. This is an avenue for further research. 
 
 ##Gender Ratios 
+We can also explore the gender ratio of adult slaves on the farms across time. We can use dplyr again for this data manipulation. First, filter out the appropriate censuses and deselect all of the children. Then filter that population by gender and summarize the numbers. We can then plot the results in a bar chart:
 ```{r}
 gender_1786_females <- slave_vertex %>%
   filter(Census.x == "1786") %>%
@@ -337,8 +376,7 @@ gender_1786 <- gender_1786_females %>%
   mutate(Percent_of_Female = Females/Total * 100) %>%
   gather(gender, percent, Percent_of_Male:Percent_of_Female)
 
-gender_1786_plot <- ggplot(data = gender_1786, aes(x = Farm.x, y = percent, fill = gender)) + geom_bar(position = position_dodge(), stat = "identity") + theme(axis.text.x=element_text(angle = 90, hjust = 0)) + ggtitle("Gender Ratio on Mount Vernon Farms in 1786")
-
+ggplot(data = gender_1786, aes(x = Farm.x, y = percent, fill = gender)) + geom_bar(position = position_dodge(), stat = "identity") + theme(axis.text.x=element_text(angle = 90, hjust = 0)) + ggtitle("Gender Ratio on Mount Vernon Farms in 1786")
 ```
 
 ```{r}
@@ -365,5 +403,11 @@ gender_1799 <- gender_1799_females %>%
   mutate(Percent_of_Female = Females/Total * 100) %>%
   gather(gender, percent, Percent_of_Male:Percent_of_Female)
 
-gender_1799_plot <- ggplot(data = gender_1799, aes(x = Farm.y, y = percent, fill = gender)) + geom_bar(position = position_dodge(), stat = "identity") + theme(axis.text.x=element_text(angle = 90, hjust = 0)) + ggtitle("Gender Ratio on Mount Vernon Farms in 1799")
+ggplot(data = gender_1799, aes(x = Farm.y, y = percent, fill = gender)) + geom_bar(position = position_dodge(), stat = "identity") + theme(axis.text.x=element_text(angle = 90, hjust = 0)) + ggtitle("Gender Ratio on Mount Vernon Farms in 1799")
 ```
+The first observation to note is that every farm has a higher number of females than males, except Mansion House farm. This exception is due to the economy of Mount Vernon. Most of the tradesmen lived and worked on Mansion House farm, such as the carpenters, blacksmiths, and bricklayers. These jobs were mostly, if not all, held by men. The relatively high number of females on the four outlying farms makes sense in examining the increase in children on the farms. 
+
+
+#Closing Thoughts
+This analysis is not complete nor as accurate as it could be, because the slavery database at Mount Vernon will not be finished for two years. This project does show the possibilities of using network analysis in R for kinship relations and from this initial exploration, the Mount Vernon enslaved community seems to follow the same pattern as other eighteenth-century Chesapeake plantations. Once the database is finished, it will have every slave, possibly from before Washington was born in 1732 to at least 1833 when the executor accounts seem to stop paying to care for his freed slaves. That is at least one hundred years of slave genealogy and kinship relationships that will be available to study- a great resource. It will be fascinating to visualize the kinship network over that time and to analyze the family structures of the Mount Vernon enslaved community. 
+
