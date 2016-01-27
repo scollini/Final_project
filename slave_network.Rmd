@@ -36,20 +36,20 @@ I cleaned the data from the compiled census with Open Refine in order to make it
 The data for this project exists in three csv files. The first file contains every slave with at least one kinship relation on Mount Vernon, from 1786-1799
 .
 ```{r}
-slaverel <- read.csv("~//Desktop/Clio-3/finalproject/slaveRelationships.csv", stringsAsFactors = FALSE)
+slaverel <- read.csv("~/Documents/digital_history/Clio-3/finalproject/slaveRelationships.csv", stringsAsFactors = FALSE)
 head(slaverel)
 ```
 
 The second contains every slave and the respective static information, such as gender and owner, for 1786 and 1799.
 ```{r}
-total_slave <- read.csv("~//Desktop/Clio-3/finalproject/clean.csv", stringsAsFactors = FALSE) %>%
+total_slave <- read.csv("~/Documents/digital_history/Clio-3/finalproject/clean.csv", stringsAsFactors = FALSE) %>%
   select(id, Gender, Birth.Year, Owner)
 head(total_slave)
 ```
 
 The third file contains both the 1786 and 1799 censuses with the relevant slaves. This means the slaves present in both censuses are repeated but might have a different skill or farm. 
 ```{r}
-slave_census <- read.csv("~//Desktop/Clio-3/finalproject/census.csv", stringsAsFactors = FALSE) %>%
+slave_census <- read.csv("~/Documents/digital_history/Clio-3/finalproject/census.csv", stringsAsFactors = FALSE) %>%
   select(id, Gender, Birth.Year, Skill, Farm, Census, Owner)
 head(slave_census)
 ```
@@ -205,14 +205,22 @@ We can access the 1799 census information with the Farm.y variable.
 ```{r}
 V(slave_graph)$color <- lookup_color(slave_vertex$Farm.y)
 set.seed(5)
-
+ 
 plot(slave_graph, 
      vertex.label = NA,      
      vertex.size = 3)
 title("Slave Family Structures on Mount Vernon Farms in 1799")
 legend("bottomleft", legend = c("Mansion House", "Muddy Hole", "Dogue Run", "Union Farm", "River Farm", "Other Farm", "Not Active"),
        col = c("purple", "blue", "green", "orange", "yellow", "brown", "gray"), pch = 19,   
+       cex = 0.8,
        title = "Farm")
+legend("bottomright", legend = c("Spouse", "Child", "Sibling"),
+       col = c("red", "orange", "blue"),
+       pch = 19,
+       cex = 0.8,
+       lty = 1,
+       title = "Kinship Relation")
+
 ```
 
 Immediately, we can see that many people were born between 1786 and 1799.
